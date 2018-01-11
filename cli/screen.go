@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"path"
 	"path/filepath"
 	"strings"
@@ -80,13 +81,18 @@ type Line struct {
 
 type Lines []Line
 
-func (s *Screen) parseLine(line string) *Line {
+func (s *Screen) parseLine(line string) (*Line, error) {
+	u, err := url.Parse(Conf.Crowi.BaseURL)
+	if err != nil {
+		return nil, err
+	}
+	u.Path = path.Join(u.Path, line)
 	return &Line{
 		Path:      line, // for now
-		URL:       path.Join(Conf.Crowi.BaseURL, line),
+		URL:       u.String(),
 		ID:        s.ID(line),
 		LocalPath: filepath.Join(Conf.Crowi.LocalPath, s.ID(line)+Extention),
-	}
+	}, nil
 }
 
 func (s *Screen) Select() (lines Lines, err error) {
@@ -116,7 +122,10 @@ func (s *Screen) Select() (lines Lines, err error) {
 		if line == "" {
 			continue
 		}
-		parsedLine := s.parseLine(line)
+		var parsedLine *Line
+		if parsedLine, err = s.parseLine(line); err != nil {
+			return
+		}
 		lines = append(lines, *parsedLine)
 	}
 
