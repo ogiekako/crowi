@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	Timeout time.Duration = 3 * time.Second
+	Timeout time.Duration = 30 * time.Second
 )
 
 type Page struct {

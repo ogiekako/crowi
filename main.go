@@ -1,6 +1,6 @@
 package main
 
-import "github.com/b4b4r07/crowi/cmd"
+import "github.com/ogiekako/crowi/cmd"
 
 func main() {
 	cmd.Execute()

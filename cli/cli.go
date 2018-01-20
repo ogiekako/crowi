@@ -3,7 +3,7 @@ package cli
 import (
 	"errors"
 
-	"github.com/b4b4r07/crowi/api"
+	"github.com/ogiekako/crowi/api"
 	"github.com/crowi/go-crowi"
 )
 

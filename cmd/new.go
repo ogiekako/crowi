@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/b4b4r07/crowi/api"
-	"github.com/b4b4r07/crowi/cli"
 	"github.com/fatih/color"
+	"github.com/ogiekako/crowi/api"
+	"github.com/ogiekako/crowi/cli"
 	"github.com/spf13/cobra"
 )
 

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/b4b4r07/crowi/cli"
+	"github.com/ogiekako/crowi/cli"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 )

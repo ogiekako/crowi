@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/b4b4r07/crowi/api" // TODO (spinner)
+	"github.com/ogiekako/crowi/api" // TODO (spinner)
 	"github.com/crowi/go-crowi"
 )
 

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/b4b4r07/crowi/cli"
+	"github.com/ogiekako/crowi/cli"
 	"github.com/spf13/cobra"
 )
 

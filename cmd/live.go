@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/b4b4r07/crowi/cli"
+	"github.com/ogiekako/crowi/cli"
 	"github.com/b4b4r07/go-portscanner"
 	"github.com/omeid/livereload"
 	"github.com/pkg/browser"
