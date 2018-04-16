@@ -6,23 +6,33 @@ import (
 )
 
 var editCmd = &cobra.Command{
-	Use:   "edit",
+	Use:   "edit [path]",
 	Short: "Edit a page",
 	Long:  `Edit a page`,
 	RunE:  edit,
 }
 
 func edit(cmd *cobra.Command, args []string) error {
-	screen, err := cli.NewScreen()
+	path := ""
+	if len(args) > 0 {
+		path = args[0]
+	}
+	screen, err := cli.NewScreen(path)
 	if err != nil {
 		return err
 	}
-	lines, err := screen.Select()
-	if err != nil {
-		return err
+	var lines cli.Lines
+	if path == "" {
+		lines, err = screen.Select()
+		if err != nil {
+			return err
+		}
+	} else {
+		lines, err = screen.GetAll()
+		if err != nil {
+			return err
+		}
 	}
-
-	// TODO: lines (range)
 	return cli.EditPage(screen.Pages, lines[0])
 }
 

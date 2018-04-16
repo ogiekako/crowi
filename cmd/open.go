@@ -13,7 +13,7 @@ var openCmd = &cobra.Command{
 }
 
 func open(cmd *cobra.Command, args []string) error {
-	screen, err := cli.NewScreen()
+	screen, err := cli.NewScreen("")
 	if err != nil {
 		return err
 	}

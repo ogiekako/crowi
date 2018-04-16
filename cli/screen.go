@@ -22,7 +22,7 @@ type Screen struct {
 	Pages *crowi.Pages
 }
 
-func NewScreen() (*Screen, error) {
+func NewScreen(path string) (*Screen, error) {
 	s := api.NewSpinner("Fetching...")
 	s.Start()
 	defer s.Stop()
@@ -30,6 +30,9 @@ func NewScreen() (*Screen, error) {
 	user := Conf.Crowi.User
 	if user == "" {
 		return &Screen{}, errors.New("user is not defined")
+	}
+	if path != "" {
+		user = ""
 	}
 
 	client, err := NewClient()
@@ -40,7 +43,7 @@ func NewScreen() (*Screen, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), api.Timeout)
 	defer cancel()
 
-	res, err := client.Pages.List(ctx, "", user, &crowi.PagesListOptions{
+	res, err := client.Pages.List(ctx, path, user, &crowi.PagesListOptions{
 		crowi.ListOptions{Pagenation: Conf.Crowi.Paging},
 	})
 	if err != nil {
@@ -116,7 +119,19 @@ func (s *Screen) Select() (lines Lines, err error) {
 		err = errors.New("no lines selected")
 		return
 	}
+	return s.lines(buf)
+}
 
+func (s *Screen) GetAll() (lines Lines, err error) {
+	var buf bytes.Buffer
+	if n, _ := buf.WriteString(s.Text); n == 0 {
+		err = errors.New("no lines selected")
+		return
+	}
+	return s.lines(buf)
+}
+
+func (s *Screen) lines(buf bytes.Buffer) (lines Lines, err error) {
 	selectedLines := strings.Split(buf.String(), "\n")
 	for _, line := range selectedLines {
 		if line == "" {
