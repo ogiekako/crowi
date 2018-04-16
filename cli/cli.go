@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/ogiekako/crowi/api"
-	"github.com/crowi/go-crowi"
+	crowi "github.com/ogiekako/go-growi"
 )
 
 func NewClient() (*crowi.Client, error) {

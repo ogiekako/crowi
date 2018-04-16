@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/crowi/go-crowi"
+	crowi "github.com/ogiekako/go-growi"
 )
 
 var (

@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/ogiekako/crowi/api" // TODO (spinner)
-	"github.com/crowi/go-crowi"
+	crowi "github.com/ogiekako/go-growi"
 )
 
 var Extention string = ".md"
