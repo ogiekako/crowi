@@ -93,11 +93,12 @@ func (page Page) download() (res *crowi.Page, err error) {
 
 	remoteBody := res.Page.Revision.Body
 	localBody, err := fileContent(page.LocalPath)
-	if err != nil {
-		return
-	}
-
-	if remoteBody == localBody {
+	switch {
+	case os.IsNotExist(err):
+		// Fall through.
+	case err != nil:
+		return nil, err
+	case remoteBody == localBody:
 		// do nothing
 		return &crowi.Page{}, nil
 	}
@@ -115,10 +116,11 @@ func (page Page) Sync() (err error) {
 	var res *crowi.Page
 
 	if !exists(page.LocalPath) {
-		err = ioutil.WriteFile(page.LocalPath, []byte(page.Info.Revision.Body), os.ModePerm)
-		if err != nil {
-			return err
+		res, err = page.download()
+		if res.OK {
+			fmt.Printf("Downloaded %s\n", res.Page.Path)
 		}
+		return err
 	}
 	fi, err := os.Stat(page.LocalPath)
 	if err != nil {
@@ -131,6 +133,9 @@ func (page Page) Sync() (err error) {
 	switch {
 	case local.After(remote):
 		res, err = page.upload()
+		if err != nil {
+			return err
+		}
 		if res.OK {
 			fmt.Printf("Uploaded %s\n", res.Page.Path)
 		}
