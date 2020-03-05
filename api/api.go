@@ -74,7 +74,12 @@ func (page Page) upload() (res *crowi.Page, err error) {
 		return &crowi.Page{}, nil
 	}
 
-	res, err = page.Client.Pages.Update(ctx, page.Info.ID, localBody)
+	// Empty body causes error: page_id and body are required.
+	if localBody == "" {
+		localBody = "."
+	}
+
+	res, err = page.Client.Pages.Update(ctx, page.Info.ID, res.Page.RevisionID, localBody)
 	return
 }
 
@@ -134,10 +139,12 @@ func (page Page) Sync() (err error) {
 	case local.After(remote):
 		res, err = page.upload()
 		if err != nil {
-			return err
+			return fmt.Errorf("Failed upload: %w", err)
 		}
 		if res.OK {
 			fmt.Printf("Uploaded %s\n", res.Page.Path)
+		} else if res.Error != "" {
+			return fmt.Errorf("Failed to upload: %s", res.Error)
 		}
 	case remote.After(local):
 		res, err = page.download()
@@ -158,6 +165,6 @@ func (page Page) Images(id string) (*crowi.Attachments, error) {
 	return page.Client.Attachments.List(context.Background(), id)
 }
 
-func (page Page) Update(id, body string) (res *crowi.Page, err error) {
-	return page.Client.Pages.Update(context.Background(), id, body)
+func (page Page) Update(id, revisionID, body string) (res *crowi.Page, err error) {
+	return page.Client.Pages.Update(context.Background(), id, revisionID, body)
 }

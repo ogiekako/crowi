@@ -78,10 +78,11 @@ func new(cmd *cobra.Command, args []string) error {
 		// Attachments
 		if imageURL.MatchString(page.body) {
 			var (
-				find = imageURL.FindAllStringSubmatch(page.body, -1)
-				file = find[0][1]
-				id   = res.Page.ID
-				body = page.body
+				find       = imageURL.FindAllStringSubmatch(page.body, -1)
+				file       = find[0][1]
+				id         = res.Page.ID
+				revisionID = res.Page.RevisionID
+				body       = page.body
 			)
 			if _, err := os.Stat(file); err == nil {
 				apipage.Attach(id, file)
@@ -97,7 +98,7 @@ func new(cmd *cobra.Command, args []string) error {
 				}
 				// update if changed
 				if body != page.body {
-					apipage.Update(id, body)
+					apipage.Update(id, revisionID, body)
 				}
 			}
 		}
