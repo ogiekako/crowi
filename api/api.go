@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"time"
 
@@ -58,9 +59,12 @@ func (page Page) upload() (res *crowi.Page, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), Timeout)
 	defer cancel()
 
-	res, err = page.Client.Pages.Get(ctx, page.Info.Path)
+	res, err = page.getWithUnescaping(ctx, page.Info.Path)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("upload: failed to get: %w", err)
+	}
+	if res.Error != "" {
+		return nil, fmt.Errorf("upload: Get failed: %v", res.Error)
 	}
 
 	remoteBody := res.Page.Revision.Body
@@ -80,7 +84,17 @@ func (page Page) upload() (res *crowi.Page, err error) {
 	}
 
 	res, err = page.Client.Pages.Update(ctx, page.Info.ID, res.Page.RevisionID, localBody)
+	if err != nil {
+		return res, fmt.Errorf("upload: failed to update: %w", err)
+	}
 	return
+}
+
+func (page Page) getWithUnescaping(ctx context.Context, p string) (*crowi.Page, error) {
+	if q, err := url.PathUnescape(p); err == nil {
+		p = q
+	}
+	return page.Client.Pages.Get(ctx, p)
 }
 
 func (page Page) download() (res *crowi.Page, err error) {
@@ -91,9 +105,12 @@ func (page Page) download() (res *crowi.Page, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), Timeout)
 	defer cancel()
 
-	res, err = page.Client.Pages.Get(ctx, page.Info.Path)
+	res, err = page.getWithUnescaping(ctx, page.Info.Path)
 	if err != nil {
 		return
+	}
+	if res.Error != "" {
+		return res, fmt.Errorf("download: failed to Get: %s", res.Error)
 	}
 
 	remoteBody := res.Page.Revision.Body

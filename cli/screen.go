@@ -18,7 +18,7 @@ var Extention string = ".md"
 
 type Screen struct {
 	Text  string
-	ID    func(string) string
+	ID    func(string) (id, path string)
 	Pages *crowi.Pages
 }
 
@@ -56,16 +56,27 @@ func NewScreen(path string) (*Screen, error) {
 
 	text := ""
 	for _, pi := range res.Pages {
-		text += fmt.Sprintf("%s\n", pi.Path)
+		s, err := url.PathUnescape(pi.Path)
+		if err != nil {
+			return nil, err
+		}
+		text += fmt.Sprintf("%s\n", s)
 	}
 
-	id := func(path string) (id string) {
+	id := func(unescapedPath string) (id, path string) {
 		for _, pi := range res.Pages {
-			if pi.Path == path {
-				return pi.ID
+			if pi.Path == unescapedPath {
+				return pi.ID, pi.Path
+			}
+			p, err := url.PathUnescape(pi.Path)
+			if err != nil {
+				continue
+			}
+			if p == unescapedPath {
+				return pi.ID, pi.Path
 			}
 		}
-		return ""
+		return "", ""
 	}
 
 	return &Screen{
@@ -85,17 +96,22 @@ type Line struct {
 type Lines []Line
 
 func (s *Screen) parseLine(line string) (*Line, error) {
+	id, p := s.ID(line)
+	if id == "" {
+		return nil, fmt.Errorf("Failed to find ID for %q", line)
+	}
 	u, err := url.Parse(Conf.Crowi.BaseURL)
 	if err != nil {
 		return nil, err
 	}
 	u.Path = path.Join(u.Path, line)
-	return &Line{
-		Path:      line, // for now
+	res := &Line{
+		Path:      p, // for now
 		URL:       u.String(),
-		ID:        s.ID(line),
-		LocalPath: filepath.Join(Conf.Crowi.LocalPath, s.ID(line)+Extention),
-	}, nil
+		ID:        id,
+		LocalPath: filepath.Join(Conf.Crowi.LocalPath, id+Extention),
+	}
+	return res, nil
 }
 
 func (s *Screen) Select() (lines Lines, err error) {
