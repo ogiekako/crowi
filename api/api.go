@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
-	"strings"
 	"time"
 
 	crowi "github.com/ogiekako/go-growi"
@@ -34,10 +33,6 @@ func NewPage(client *crowi.Client) *Page {
 }
 
 func (page Page) Create(path, body string) (*crowi.Page, error) {
-	if !strings.HasSuffix(path, "/") {
-		path += "/"
-	}
-
 	s := NewSpinner("Posting...")
 	s.Start()
 	defer s.Stop()

@@ -2,10 +2,12 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -50,15 +52,31 @@ func Run(command string, args ...string) error {
 	if command == "" {
 		return errors.New("command not found")
 	}
-	command += " " + strings.Join(args, " ")
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/c", command)
+		cmd = exec.Command("cmd", "/c", command+" "+strings.Join(args, " "))
 	} else {
-		cmd = exec.Command("sh", "-c", command)
+		for i := range args {
+			args[i] = Escape(args[i])
+		}
+		cmd = exec.Command("sh", "-c", command+" "+strings.Join(args, " "))
 	}
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	return cmd.Run()
+}
+
+const (
+	leadingSafeChars  = `-\w@%+:,./`
+	trailingSafeChars = leadingSafeChars + "="
+)
+
+var safeRE = regexp.MustCompile(fmt.Sprintf("^[%s][%s]*$", leadingSafeChars, trailingSafeChars))
+
+func Escape(s string) string {
+	if safeRE.MatchString(s) {
+		return s
+	}
+	return "'" + strings.Replace(s, "'", `'"'"'`, -1) + "'"
 }
