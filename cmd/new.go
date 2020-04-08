@@ -37,20 +37,26 @@ var (
 	datePath = regexp.MustCompile(`^/.*/(.*?/\d{4}/\d{2}/\d{2})$`)
 )
 
-func new(cmd *cobra.Command, args []string) error {
+func new(cmd *cobra.Command, args []string) (retErr error) {
 	var (
 		pages []page
+		clean func()
 		err   error
 	)
 	switch {
 	case len(args) == 0:
-		pages, err = makeFromEditor()
+		pages, clean, err = makeFromEditor()
 	case len(args) > 0:
 		pages, err = makeFromArgs(args)
 	}
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if retErr == nil && clean != nil {
+			clean()
+		}
+	}()
 
 	if len(pages) == 0 {
 		return errors.New("no pages")
@@ -113,10 +119,11 @@ type page struct {
 	path, body string
 }
 
-func makeFromEditor() (pages []page, err error) {
+func makeFromEditor() (pages []page, clean func(), retErr error) {
 	user := cli.Conf.Crowi.User
 	if user == "" {
-		return pages, errors.New("config user not defined")
+		retErr = errors.New("config user not defined")
+		return
 	}
 	date := time.Now().Format("2006/01/02")
 	defaultPath := path.Join("/user", user, "memo", cli.Conf.Crowi.PageName, date)
@@ -127,13 +134,17 @@ func makeFromEditor() (pages []page, err error) {
 		return
 	}
 	if !filepath.HasPrefix(pagepath, "/") {
-		return pages, errors.New("path: it must start with a slash")
+		retErr = errors.New("path: it must start with a slash")
+		return
 	}
 	// Do not make it a portal page
 	pagepath = strings.TrimSuffix(pagepath, "/")
 
 	f, err := cli.TempFile(filepath.Base(pagepath) + cli.Extention)
-	defer os.Remove(f.Name())
+	defClean := func() {
+		os.Remove(f.Name())
+	}
+	defer defClean()
 
 	var content []byte
 	matched := datePath.FindStringSubmatch(pagepath)
@@ -150,22 +161,28 @@ func makeFromEditor() (pages []page, err error) {
 
 	editor := cli.Conf.Core.Editor
 	if editor == "" {
-		return pages, errors.New("config editor not defined")
+		retErr = errors.New("config editor not defined")
+		return
 	}
 	err = cli.Run(editor, f.Name())
 	if err != nil {
+		retErr = err
 		return
 	}
 
 	body := cli.FileContent(f.Name())
 	if body == "" || body == string(content) {
-		return pages, errors.New("did nothing due to no contents")
+		retErr = errors.New("did nothing due to no contents")
+		return
 	}
+
+	clean = defClean
+	defClean = func() {}
 
 	return []page{{
 		path: urlSafe.Replace(pagepath),
 		body: body,
-	}}, nil
+	}}, clean, nil
 }
 
 func makeFromArgs(args []string) (pages []page, err error) {
